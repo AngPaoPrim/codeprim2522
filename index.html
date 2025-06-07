@@ -12,10 +12,13 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
     }
     #tabs {
       display: flex;
       background: #2c2c2c;
+      align-items: center;
+      padding: 0 10px;
     }
     .tab {
       flex: 1;
@@ -25,6 +28,7 @@
       background: #2c2c2c;
       border-bottom: 2px solid transparent;
       transition: background 0.2s;
+      max-width: 120px;
     }
     .tab:hover {
       background: #3a3a3a;
@@ -33,14 +37,110 @@
       background: #3c3c3c;
       border-bottom: 2px solid #00ff99;
     }
+    .controls {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: 10px;
+    }
+    #toggle-preview {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #00ff99;
+      border: none;
+      color: #222;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    #toggle-preview:hover {
+      background: #00cc77;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .container.vertical {
+      flex-direction: column;
+    }
+    .container.horizontal {
+      flex-direction: row;
+    }
     #editor {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+    .container.vertical #editor {
       height: 50%;
-      width: 100%;
+    }
+    .container.horizontal #editor {
+      width: 50%;
     }
     iframe {
       flex: 1;
       border: none;
       background: white;
+      min-height: 0;
+      min-width: 0;
+    }
+    .container.vertical iframe {
+      height: 50%;
+    }
+    .container.horizontal iframe {
+      width: 50%;
+    }
+    .preview-hidden iframe {
+      display: none;
+    }
+    .preview-hidden #editor {
+      height: 100% !important;
+      width: 100% !important;
+    }
+    .container.fullscreen-preview {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+      background: white;
+    }
+    .container.fullscreen-preview #editor {
+      display: none;
+    }
+    .container.fullscreen-preview iframe {
+      width: 100%;
+      height: 100%;
+    }
+    .fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      display: none;
+    }
+    .fullscreen-overlay.active {
+      display: block;
+    }
+    #exit-fullscreen {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+      padding: 10px 20px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+    #exit-fullscreen.active {
+      display: block;
     }
   </style>
 </head>
@@ -49,29 +149,127 @@
     <div class="tab active" data-lang="html">HTML</div>
     <div class="tab" data-lang="css">CSS</div>
     <div class="tab" data-lang="javascript">JavaScript</div>
+    <div class="controls">
+      <select id="layout-select" style="padding: 8px; background: #3c3c3c; color: white; border: 1px solid #555; border-radius: 4px;">
+        <option value="vertical">Vertical Split</option>
+        <option value="horizontal">Horizontal Split</option>
+        <option value="fullscreen-preview">Fullscreen Preview</option>
+      </select>
+      <button id="toggle-preview">Hide Preview</button>
+    </div>
   </div>
 
-  <div id="editor"></div>
-  <iframe id="preview"></iframe>
+  <div class="fullscreen-overlay" id="fullscreen-overlay"></div>
+  <button id="exit-fullscreen">Exit Fullscreen (ESC)</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.5.0/dist/emmet-monaco.min.js"></script>
+  <div class="container vertical" id="main-container">
+    <div id="editor"></div>
+    <iframe id="preview"></iframe>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/emmet-monaco-es/5.5.0/dist/emmet-monaco.min.js"></script>
   <script>
     const code = {
-      html: "<div>\n  Hello World!\n</div>",
-      css: "body {\n  background-color: #fff;\n  color: #000;\n  font-family: sans-serif;\n}",
-      javascript: "console.log('Hello from JS!');"
+      html: `<div class="container">
+  <h1>Hello World!</h1>
+  <p>Welcome to Mini CodePen</p>
+  <button onclick="changeColor()">Change Color</button>
+</div>`,
+      css: `body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+p {
+  font-size: 1.2em;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+button {
+  background: #00ff99;
+  color: #222;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+button:hover {
+  background: #00cc77;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 153, 0.4);
+}`,
+      javascript: `function changeColor() {
+  const colors = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+  ];
+  
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  document.body.style.background = randomColor;
+  
+  console.log('Background changed to:', randomColor);
+}
+
+// Add some interactive features
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Mini CodePen loaded successfully!');
+  
+  // Add click animation to container
+  const container = document.querySelector('.container');
+  if (container) {
+    container.addEventListener('click', function(e) {
+      if (e.target.tagName !== 'BUTTON') {
+        this.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+          this.style.transform = 'scale(1)';
+        }, 150);
+      }
+    });
+  }
+});`
     };
 
     let currentLang = "html";
     let editor;
+    let previewVisible = true;
+    let isFullscreen = false;
 
-    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+    require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs" } });
 
     require(["vs/editor/editor.main"], function () {
-      // ตั้งค่า theme เป็น vs-dark (เหมือน VS Code)
       monaco.editor.setTheme('vs-dark');
-
       editor = monaco.editor.create(document.getElementById("editor"), {
         value: code[currentLang],
         language: currentLang,
@@ -97,21 +295,22 @@
         acceptSuggestionOnEnter: "on",
         acceptSuggestionOnCommitCharacter: true,
         tabCompletion: "on",
-        minimap: { enabled: true }, // เพิ่ม minimap แบบ VS Code
-        fontLigatures: true,        // เปิด font ligatures
-        renderWhitespace: "all",    // แสดง whitespace
-        renderLineHighlight: "all", // Hilight บรรทัดปัจจุบัน
+        minimap: { enabled: true },
+        fontLigatures: true,
+        renderWhitespace: "selection",
+        renderLineHighlight: "all",
         smoothScrolling: true
       });
 
-      // Enable Emmet for HTML, CSS, JSX
-      emmetMonaco.emmetHTML(monaco);
-      emmetMonaco.emmetCSS(monaco);
-      emmetMonaco.emmetJSX(monaco);
+      // Enable Emmet for HTML, CSS
+      if (typeof emmetMonaco !== 'undefined') {
+        emmetMonaco.emmetHTML(monaco);
+        emmetMonaco.emmetCSS(monaco);
+        emmetMonaco.emmetJSX(monaco);
+      }
 
-      // Enable AutoClose Tag for HTML
+      // Enhanced HTML IntelliSense
       monaco.languages.html.htmlDefaults.setOptions({
-        autoClosingTags: true,
         suggest: {
           html5: true,
           angular1: true,
@@ -119,7 +318,7 @@
         }
       });
 
-      // Enable CSS/JS IntelliSense (hover, signature, completion)
+      // Enhanced JavaScript IntelliSense
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
         target: monaco.languages.typescript.ScriptTarget.ESNext,
         allowNonTsExtensions: true,
@@ -133,6 +332,7 @@
         noSyntaxValidation: false
       });
 
+      // Enhanced CSS IntelliSense
       monaco.languages.css.cssDefaults.setOptions({
         validate: true,
         lint: {
@@ -146,62 +346,83 @@
         }
       });
 
-      // HTML Snippet แบบ VS Code
+      // HTML Snippets
       monaco.languages.registerCompletionItemProvider('html', {
         provideCompletionItems: () => {
           return {
             suggestions: [
               {
+                label: 'html5',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>$1</title>\n</head>\n<body>\n  $2\n</body>\n</html>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'HTML5 boilerplate'
+              },
+              {
                 label: 'div',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<div>$1</div>',
+                insertText: '<div class="$1">$2</div>',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Insert <div></div>'
+                documentation: 'Div with class'
               },
               {
                 label: 'img',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<img src="$1" alt="$2">',
+                insertText: '<img src="$1" alt="$2" />',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Insert <img>'
+                documentation: 'Image tag'
               },
               {
-                label: 'a',
+                label: 'link',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<a href="$1">$2</a>',
+                insertText: '<a href="$1" target="$2">$3</a>',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Insert <a href=""></a>'
+                documentation: 'Link tag'
               },
               {
-                label: 'button',
+                label: 'btn',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<button>$1</button>',
+                insertText: '<button onclick="$1">$2</button>',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Insert <button></button>'
+                documentation: 'Button with onclick'
               }
             ]
           };
         }
       });
 
-      // CSS Snippet ตัวอย่าง
+      // CSS Snippets
       monaco.languages.registerCompletionItemProvider('css', {
         provideCompletionItems: () => {
           return {
             suggestions: [
               {
-                label: 'center-box',
+                label: 'flexcenter',
                 kind: monaco.languages.CompletionItemKind.Snippet,
                 insertText: 'display: flex;\njustify-content: center;\nalign-items: center;',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Center box with flex'
+                documentation: 'Flex center layout'
+              },
+              {
+                label: 'gradient',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'background: linear-gradient(${1:135deg}, ${2:#667eea} 0%, ${3:#764ba2} 100%);',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Linear gradient background'
+              },
+              {
+                label: 'shadow',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'box-shadow: ${1:0 4px 8px} rgba(${2:0, 0, 0}, ${3:0.1});',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Box shadow'
               }
             ]
           };
         }
       });
 
-      // JS Snippet ตัวอย่าง
+      // JavaScript Snippets
       monaco.languages.registerCompletionItemProvider('javascript', {
         provideCompletionItems: () => {
           return {
@@ -209,27 +430,43 @@
               {
                 label: 'log',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'console.log($1);',
+                insertText: 'console.log(${1:message});',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'console.log'
+                documentation: 'Console log'
               },
               {
                 label: 'func',
                 kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'function $1($2) {\n  $0\n}',
+                insertText: 'function ${1:functionName}(${2:params}) {\n  ${3:// code here}\n}',
                 insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'function'
+                documentation: 'Function declaration'
+              },
+              {
+                label: 'arrow',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'const ${1:functionName} = (${2:params}) => {\n  ${3:// code here}\n};',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Arrow function'
+              },
+              {
+                label: 'eventlistener',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'document.addEventListener(\'${1:DOMContentLoaded}\', function(${2:event}) {\n  ${3:// code here}\n});',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Event listener'
               }
             ]
           };
         }
       });
 
+      // Update preview on code change
       editor.onDidChangeModelContent(() => {
         code[currentLang] = editor.getValue();
         updatePreview();
       });
 
+      // Tab switching
       document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
           if (tab.classList.contains("active")) return;
@@ -245,6 +482,74 @@
         });
       });
 
+      // Layout switching
+      const layoutSelect = document.getElementById("layout-select");
+      const container = document.getElementById("main-container");
+      const overlay = document.getElementById("fullscreen-overlay");
+      const exitBtn = document.getElementById("exit-fullscreen");
+
+      layoutSelect.addEventListener("change", function() {
+        const selectedLayout = this.value;
+        
+        if (selectedLayout === "fullscreen-preview") {
+          enterFullscreen();
+        } else {
+          exitFullscreen();
+          container.className = `container ${selectedLayout}`;
+          setTimeout(() => {
+            editor.layout();
+          }, 100);
+        }
+      });
+
+      function enterFullscreen() {
+        isFullscreen = true;
+        container.className = "container fullscreen-preview";
+        overlay.classList.add("active");
+        exitBtn.classList.add("active");
+        document.getElementById("tabs").style.display = "none";
+      }
+
+      function exitFullscreen() {
+        isFullscreen = false;
+        container.className = "container vertical";
+        overlay.classList.remove("active");
+        exitBtn.classList.remove("active");
+        document.getElementById("tabs").style.display = "flex";
+        layoutSelect.value = "vertical";
+        setTimeout(() => {
+          editor.layout();
+        }, 100);
+      }
+
+      // Exit fullscreen button
+      exitBtn.addEventListener("click", exitFullscreen);
+
+      // ESC key to exit fullscreen
+      document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && isFullscreen) {
+          exitFullscreen();
+        }
+      });
+
+      // Toggle preview visibility
+      document.getElementById("toggle-preview").addEventListener("click", function() {
+        previewVisible = !previewVisible;
+        
+        if (previewVisible) {
+          container.classList.remove("preview-hidden");
+          this.textContent = "Hide Preview";
+        } else {
+          container.classList.add("preview-hidden");
+          this.textContent = "Show Preview";
+        }
+        
+        setTimeout(() => {
+          editor.layout();
+        }, 100);
+      });
+
+      // Initial preview update
       updatePreview();
     });
 
@@ -253,11 +558,12 @@
       const cssContent = `<style>${code.css || ""}</style>`;
       const jsContent = `<script>${code.javascript || ""}<\/script>`;
 
-      const full = `
+      const fullContent = `
         <!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           ${cssContent}
         </head>
         <body>
@@ -267,7 +573,7 @@
         </html>
       `;
 
-      document.getElementById("preview").srcdoc = full;
+      document.getElementById("preview").srcdoc = fullContent;
     }
   </script>
 </body>
