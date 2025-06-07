@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini CodePen Full IntelliSense</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #1e1e1e;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #tabs {
+      display: flex;
+      background: #2c2c2c;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: #2c2c2c;
+      border-bottom: 2px solid transparent;
+      transition: background 0.2s;
+    }
+    .tab:hover {
+      background: #3a3a3a;
+    }
+    .tab.active {
+      background: #3c3c3c;
+      border-bottom: 2px solid #00ff99;
+    }
+    #editor {
+      height: 50%;
+      width: 100%;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="tabs">
+    <div class="tab active" data-lang="html">HTML</div>
+    <div class="tab" data-lang="css">CSS</div>
+    <div class="tab" data-lang="javascript">JavaScript</div>
+  </div>
+
+  <div id="editor"></div>
+  <iframe id="preview"></iframe>
+
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.5.0/dist/emmet-monaco.min.js"></script>
+  <script>
+    const code = {
+      html: "<div>\n  Hello World!\n</div>",
+      css: "body {\n  background-color: #fff;\n  color: #000;\n  font-family: sans-serif;\n}",
+      javascript: "console.log('Hello from JS!');"
+    };
+
+    let currentLang = "html";
+    let editor;
+
+    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+
+    require(["vs/editor/editor.main"], function () {
+      // ตั้งค่า theme เป็น vs-dark (เหมือน VS Code)
+      monaco.editor.setTheme('vs-dark');
+
+      editor = monaco.editor.create(document.getElementById("editor"), {
+        value: code[currentLang],
+        language: currentLang,
+        theme: "vs-dark",
+        automaticLayout: true,
+        tabSize: 2,
+        insertSpaces: true,
+        wordBasedSuggestions: true,
+        suggestOnTriggerCharacters: true,
+        quickSuggestions: {
+          other: true,
+          comments: true,
+          strings: true
+        },
+        snippetSuggestions: "top",
+        suggestSelection: "first",
+        parameterHints: { enabled: true },
+        formatOnType: true,
+        formatOnPaste: true,
+        autoClosingBrackets: "always",
+        autoClosingQuotes: "always",
+        autoSurround: "languageDefined",
+        acceptSuggestionOnEnter: "on",
+        acceptSuggestionOnCommitCharacter: true,
+        tabCompletion: "on",
+        minimap: { enabled: true }, // เพิ่ม minimap แบบ VS Code
+        fontLigatures: true,        // เปิด font ligatures
+        renderWhitespace: "all",    // แสดง whitespace
+        renderLineHighlight: "all", // Hilight บรรทัดปัจจุบัน
+        smoothScrolling: true
+      });
+
+      // Enable Emmet for HTML, CSS, JSX
+      emmetMonaco.emmetHTML(monaco);
+      emmetMonaco.emmetCSS(monaco);
+      emmetMonaco.emmetJSX(monaco);
+
+      // Enable AutoClose Tag for HTML
+      monaco.languages.html.htmlDefaults.setOptions({
+        autoClosingTags: true,
+        suggest: {
+          html5: true,
+          angular1: true,
+          ionic: true
+        }
+      });
+
+      // Enable CSS/JS IntelliSense (hover, signature, completion)
+      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        allowNonTsExtensions: true,
+        allowJs: true,
+        checkJs: false,
+        noEmit: true
+      });
+
+      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: false,
+        noSyntaxValidation: false
+      });
+
+      monaco.languages.css.cssDefaults.setOptions({
+        validate: true,
+        lint: {
+          compatibleVendorPrefixes: "warning",
+          vendorPrefix: "warning",
+          duplicateProperties: "warning",
+          emptyRules: "warning",
+          importStatement: "ignore",
+          boxModel: "ignore",
+          universalSelector: "ignore"
+        }
+      });
+
+      // HTML Snippet แบบ VS Code
+      monaco.languages.registerCompletionItemProvider('html', {
+        provideCompletionItems: () => {
+          return {
+            suggestions: [
+              {
+                label: 'div',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<div>$1</div>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Insert <div></div>'
+              },
+              {
+                label: 'img',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<img src="$1" alt="$2">',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Insert <img>'
+              },
+              {
+                label: 'a',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<a href="$1">$2</a>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Insert <a href=""></a>'
+              },
+              {
+                label: 'button',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<button>$1</button>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Insert <button></button>'
+              }
+            ]
+          };
+        }
+      });
+
+      // CSS Snippet ตัวอย่าง
+      monaco.languages.registerCompletionItemProvider('css', {
+        provideCompletionItems: () => {
+          return {
+            suggestions: [
+              {
+                label: 'center-box',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'display: flex;\njustify-content: center;\nalign-items: center;',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Center box with flex'
+              }
+            ]
+          };
+        }
+      });
+
+      // JS Snippet ตัวอย่าง
+      monaco.languages.registerCompletionItemProvider('javascript', {
+        provideCompletionItems: () => {
+          return {
+            suggestions: [
+              {
+                label: 'log',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'console.log($1);',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'console.log'
+              },
+              {
+                label: 'func',
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'function $1($2) {\n  $0\n}',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'function'
+              }
+            ]
+          };
+        }
+      });
+
+      editor.onDidChangeModelContent(() => {
+        code[currentLang] = editor.getValue();
+        updatePreview();
+      });
+
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          if (tab.classList.contains("active")) return;
+
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+
+          code[currentLang] = editor.getValue();
+          currentLang = tab.getAttribute("data-lang");
+
+          monaco.editor.setModelLanguage(editor.getModel(), currentLang);
+          editor.setValue(code[currentLang]);
+        });
+      });
+
+      updatePreview();
+    });
+
+    function updatePreview() {
+      const htmlContent = code.html || "";
+      const cssContent = `<style>${code.css || ""}</style>`;
+      const jsContent = `<script>${code.javascript || ""}<\/script>`;
+
+      const full = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          ${cssContent}
+        </head>
+        <body>
+          ${htmlContent}
+          ${jsContent}
+        </body>
+        </html>
+      `;
+
+      document.getElementById("preview").srcdoc = full;
+    }
+  </script>
+</body>
+</html>
