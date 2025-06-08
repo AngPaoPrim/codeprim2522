@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mini CodePen Full IntelliSense</title>
+  <title>Mini CodePen Enhanced Auto Complete</title>
   <style>
     body {
       margin: 0;
@@ -105,6 +105,7 @@
       height: 100vh;
       z-index: 1000;
       background: white;
+      flex-direction: column;
     }
     .container.fullscreen-preview #editor {
       display: none;
@@ -167,8 +168,8 @@
     <iframe id="preview"></iframe>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/emmet-monaco-es/5.5.0/dist/emmet-monaco.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.5.0/dist/emmet-monaco.min.js"></script>
   <script>
     const code = {
       html: `<div class="container">
@@ -266,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let previewVisible = true;
     let isFullscreen = false;
 
-    require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs" } });
+    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
 
     require(["vs/editor/editor.main"], function () {
       monaco.editor.setTheme('vs-dark');
@@ -284,13 +285,16 @@ document.addEventListener('DOMContentLoaded', function() {
           comments: true,
           strings: true
         },
+        quickSuggestionsDelay: 10,
         snippetSuggestions: "top",
         suggestSelection: "first",
-        parameterHints: { enabled: true },
+        parameterHints: { enabled: true, cycle: true },
         formatOnType: true,
         formatOnPaste: true,
         autoClosingBrackets: "always",
         autoClosingQuotes: "always",
+        autoClosingDelete: "always",
+        autoClosingOvertype: "always",
         autoSurround: "languageDefined",
         acceptSuggestionOnEnter: "on",
         acceptSuggestionOnCommitCharacter: true,
@@ -299,18 +303,41 @@ document.addEventListener('DOMContentLoaded', function() {
         fontLigatures: true,
         renderWhitespace: "selection",
         renderLineHighlight: "all",
-        smoothScrolling: true
+        smoothScrolling: true,
+        mouseWheelZoom: true,
+        foldingStrategy: "auto",
+        showFoldingControls: "always",
+        bracketPairColorization: { enabled: true },
+        guides: {
+          bracketPairs: true,
+          indentation: true,
+          bracketPairsHorizontal: true
+        }
       });
 
-      // Enable Emmet for HTML, CSS
+      // Emmet
       if (typeof emmetMonaco !== 'undefined') {
         emmetMonaco.emmetHTML(monaco);
         emmetMonaco.emmetCSS(monaco);
         emmetMonaco.emmetJSX(monaco);
       }
 
-      // Enhanced HTML IntelliSense
+      // HTML config
       monaco.languages.html.htmlDefaults.setOptions({
+        format: {
+          tabSize: 2,
+          insertSpaces: true,
+          wrapLineLength: 120,
+          unformatted: 'default',
+          contentUnformatted: 'pre,code,textarea',
+          indentInnerHtml: false,
+          preserveNewLines: true,
+          maxPreserveNewLines: 2,
+          indentHandlebars: false,
+          endWithNewline: false,
+          extraLiners: 'head, body, /html',
+          wrapAttributes: 'auto'
+        },
         suggest: {
           html5: true,
           angular1: true,
@@ -318,21 +345,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // Enhanced JavaScript IntelliSense
+      // JS config
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
         allowJs: true,
-        checkJs: false,
-        noEmit: true
+        checkJs: true,
+        noEmit: true,
+        lib: [
+          'dom',
+          'dom.iterable',
+          'es6',
+          'es2017',
+          'es2018.asynciterable'
+        ]
       });
 
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: false,
-        noSyntaxValidation: false
+        noSyntaxValidation: false,
+        noSuggestionDiagnostics: false
       });
 
-      // Enhanced CSS IntelliSense
+      // CSS config
       monaco.languages.css.cssDefaults.setOptions({
         validate: true,
         lint: {
@@ -342,141 +377,62 @@ document.addEventListener('DOMContentLoaded', function() {
           emptyRules: "warning",
           importStatement: "ignore",
           boxModel: "ignore",
-          universalSelector: "ignore"
+          universalSelector: "ignore",
+          zeroUnits: "ignore",
+          fontFaceProperties: "warning",
+          hexColorLength: "error",
+          argumentsInColorFunction: "error",
+          unknownProperties: "warning",
+          ieHack: "ignore",
+          unknownVendorSpecificProperties: "ignore",
+          propertyIgnoredDueToDisplay: "warning",
+          important: "ignore",
+          float: "ignore",
+          idSelector: "ignore"
         }
       });
 
-      // HTML Snippets
+      // --- HTML Tag Auto Complete: พิมพ์ tag แล้ว Tab ได้ทุก tag ---
+      const htmlTags = [
+        "div", "span", "section", "header", "footer", "nav", "main", "aside", "article",
+        "ul", "ol", "li", "a", "img", "h1", "h2", "h3", "h4", "h5", "h6", "p", "button",
+        "input", "form", "label", "textarea", "select", "option", "table", "thead", "tbody", "tr", "td", "th"
+      ];
       monaco.languages.registerCompletionItemProvider('html', {
-        provideCompletionItems: () => {
-          return {
-            suggestions: [
-              {
-                label: 'html5',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>$1</title>\n</head>\n<body>\n  $2\n</body>\n</html>',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'HTML5 boilerplate'
-              },
-              {
-                label: 'div',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<div class="$1">$2</div>',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Div with class'
-              },
-              {
-                label: 'img',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<img src="$1" alt="$2" />',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Image tag'
-              },
-              {
-                label: 'link',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<a href="$1" target="$2">$3</a>',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Link tag'
-              },
-              {
-                label: 'btn',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: '<button onclick="$1">$2</button>',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Button with onclick'
-              }
-            ]
-          };
-        }
-      });
+        triggerCharacters: htmlTags.map(tag => tag[0]),
+        provideCompletionItems: function(model, position) {
+          const word = model.getWordUntilPosition(position);
+          const textUntilPosition = model.getValueInRange({
+            startLineNumber: position.lineNumber,
+            startColumn: 1,
+            endLineNumber: position.lineNumber,
+            endColumn: position.column
+          });
 
-      // CSS Snippets
-      monaco.languages.registerCompletionItemProvider('css', {
-        provideCompletionItems: () => {
-          return {
-            suggestions: [
-              {
-                label: 'flexcenter',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'display: flex;\njustify-content: center;\nalign-items: center;',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Flex center layout'
-              },
-              {
-                label: 'gradient',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'background: linear-gradient(${1:135deg}, ${2:#667eea} 0%, ${3:#764ba2} 100%);',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Linear gradient background'
-              },
-              {
-                label: 'shadow',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'box-shadow: ${1:0 4px 8px} rgba(${2:0, 0, 0}, ${3:0.1});',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Box shadow'
-              }
-            ]
-          };
-        }
-      });
+          const suggestions = htmlTags
+            .filter(tag => new RegExp(`(\\s|^)${tag}$`).test(textUntilPosition))
+            .map(tag => ({
+              label: tag,
+              kind: monaco.languages.CompletionItemKind.Snippet,
+              insertText: tag === "img" || tag === "input" || tag === "br" || tag === "hr"
+                ? `<${tag} $1 />`
+                : `<${tag}>$1</${tag}>`,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: `${tag} element`
+            }));
 
-      // JavaScript Snippets
-      monaco.languages.registerCompletionItemProvider('javascript', {
-        provideCompletionItems: () => {
-          return {
-            suggestions: [
-              {
-                label: 'log',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'console.log(${1:message});',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Console log'
-              },
-              {
-                label: 'func',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'function ${1:functionName}(${2:params}) {\n  ${3:// code here}\n}',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Function declaration'
-              },
-              {
-                label: 'arrow',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'const ${1:functionName} = (${2:params}) => {\n  ${3:// code here}\n};',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Arrow function'
-              },
-              {
-                label: 'eventlistener',
-                kind: monaco.languages.CompletionItemKind.Snippet,
-                insertText: 'document.addEventListener(\'${1:DOMContentLoaded}\', function(${2:event}) {\n  ${3:// code here}\n});',
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                documentation: 'Event listener'
-              }
-            ]
-          };
+          return { suggestions };
         }
-      });
-
-      // Update preview on code change
-      editor.onDidChangeModelContent(() => {
-        code[currentLang] = editor.getValue();
-        updatePreview();
       });
 
       // Tab switching
       document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
           if (tab.classList.contains("active")) return;
-
           document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
           tab.classList.add("active");
-
           code[currentLang] = editor.getValue();
           currentLang = tab.getAttribute("data-lang");
-
           monaco.editor.setModelLanguage(editor.getModel(), currentLang);
           editor.setValue(code[currentLang]);
         });
@@ -490,7 +446,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
       layoutSelect.addEventListener("change", function() {
         const selectedLayout = this.value;
-        
         if (selectedLayout === "fullscreen-preview") {
           enterFullscreen();
         } else {
@@ -535,7 +490,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Toggle preview visibility
       document.getElementById("toggle-preview").addEventListener("click", function() {
         previewVisible = !previewVisible;
-        
         if (previewVisible) {
           container.classList.remove("preview-hidden");
           this.textContent = "Hide Preview";
@@ -543,10 +497,15 @@ document.addEventListener('DOMContentLoaded', function() {
           container.classList.add("preview-hidden");
           this.textContent = "Show Preview";
         }
-        
         setTimeout(() => {
           editor.layout();
         }, 100);
+      });
+
+      // Auto update preview
+      editor.onDidChangeModelContent(() => {
+        code[currentLang] = editor.getValue();
+        updatePreview();
       });
 
       // Initial preview update
