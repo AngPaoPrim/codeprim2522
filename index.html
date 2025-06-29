@@ -234,17 +234,21 @@
     <div class="tab" data-lang="css">CSS</div>
     <div class="tab" data-lang="javascript">JavaScript</div>
     <div class="controls">
-      <select id="layout-select" style="padding: 8px; background: #3c3c3c; color: white; border: 1px solid #555; border-radius: 4px;">
+        <select id="layout-select" style="padding: 8px; background: #3c3c3c; color: white; border: 1px solid #555; border-radius: 4px;">
         <option value="vertical">Vertical Split</option>
         <option value="horizontal">Horizontal Split</option>
         <option value="fullscreen-preview">Fullscreen Preview</option>
-      </select>
-      <button id="toggle-preview">Hide Preview</button>
-      <button id="save-code">Save</button>
-      <button id="load-code">Load</button>
-      <button id="clear-code">Clear</button>
-      <span class="angpaoprim-brand">by AngPaoPrim</span>
-    </div>
+        </select>
+        <button id="toggle-preview">Hide Preview</button>
+        <label style="color:white; margin-left: 10px; user-select:none;">
+        <input type="checkbox" id="toggle-autosave" checked />
+        Auto Save
+        </label>
+        <button id="save-code">Save</button>
+        <button id="load-code">Load</button>
+        <button id="clear-code">Clear</button>
+        <span class="angpaoprim-brand">by AngPaoPrim</span>
+        </div>
   </div>
 
   <!-- AngPaoPrim Fullscreen Controls -->
@@ -804,6 +808,50 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
 
     // AngPaoPrim Analytics
     console.log('AngPaoPrim Mini CodePen with Fixed Save/Load System!');
+
+    // ตัวแปรเก็บสถานะ Auto Save
+let autoSaveEnabled = true;
+
+// โหลดสถานะ toggle auto save จาก localStorage (ถ้ามี)
+const toggleAutoSaveCheckbox = document.getElementById('toggle-autosave');
+const savedAutoSaveStatus = localStorage.getItem('angpaoprim-auto-save-enabled');
+if (savedAutoSaveStatus !== null) {
+  autoSaveEnabled = savedAutoSaveStatus === 'true';
+  toggleAutoSaveCheckbox.checked = autoSaveEnabled;
+}
+
+// ฟังก์ชันแสดงแจ้งเตือนง่าย ๆ
+function showNotification(message) {
+  alert(message);
+}
+
+// ฟังชันก์เปลี่ยนสถานะ toggle
+toggleAutoSaveCheckbox.addEventListener('change', () => {
+  autoSaveEnabled = toggleAutoSaveCheckbox.checked;
+  localStorage.setItem('angpaoprim-auto-save-enabled', autoSaveEnabled);
+  showNotification(`Auto Save ${autoSaveEnabled ? 'เปิด' : 'ปิด'}`);
+});
+
+// ตัวอย่างการใช้งาน Auto Save (บันทึกโค้ดลง localStorage ทุก 30 วินาที เมื่อเปิด)
+setInterval(() => {
+  if (!autoSaveEnabled) return;
+
+  // สมมติโค้ดของคุณเก็บในตัวแปร codeObj
+  // เช่น codeObj = {html: "...", css: "...", js: "..."}
+  
+  // ตัวอย่าง:
+  const codeObj = {
+    html: document.getElementById('html-editor').value || '',
+    css: document.getElementById('css-editor').value || '',
+    js: document.getElementById('js-editor').value || ''
+  };
+
+  localStorage.setItem('angpaoprim-code-autosave', JSON.stringify(codeObj));
+  console.log('Auto-saved code.');
+}, 30000),alert("save");
+
+
+
   </script>
 </body>
 </html>
