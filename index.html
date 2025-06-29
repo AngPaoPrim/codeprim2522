@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <<title>AngPaoPrim Mini CodePen - Enhanced Auto Complete</title>
+  <title>AngPaoPrim Mini CodePen - Enhanced Auto Complete</title>
   <meta name="description" content="AngPaoPrim Mini CodePen ตัวอย่างระบบ Enhanced Auto Complete ด้วย HTML CSS JavaScript ใช้งานง่ายและเรียนรู้ได้เร็ว โดย AngPaoPrim Developer.">
   <meta name="keywords" content="AngPaoPrim, Mini CodePen, Auto Complete, HTML, CSS, JavaScript, ตัวอย่างโค้ด, เว็บสำหรับฝึกเขียนโค้ด, AngPaoPrim Code, AngPaoPrim Tutorial">
   <meta name="author" content="AngPaoPrim">
@@ -14,6 +14,7 @@
   <title>AngPaoPrim AngPaoCode</title>
   <title>AngPaoPrim Mini CodePen Enhanced Auto Complete</title>
   <style>
+    /* AngPaoPrim Custom Styles */
     body {
       margin: 0;
       font-family: sans-serif;
@@ -24,6 +25,7 @@
       height: 100vh;
       overflow: hidden;
     }
+    /* AngPaoPrim Tab Styles */
     #tabs {
       display: flex;
       background: #2c2c2c;
@@ -47,6 +49,7 @@
       background: #3c3c3c;
       border-bottom: 2px solid #00ff99;
     }
+    /* AngPaoPrim Controls */
     .controls {
       display: flex;
       align-items: center;
@@ -65,6 +68,7 @@
     #toggle-preview:hover {
       background: #00cc77;
     }
+    /* AngPaoPrim Container Styles */
     .container {
       display: flex;
       flex: 1;
@@ -76,6 +80,7 @@
     .container.horizontal {
       flex-direction: row;
     }
+    /* AngPaoPrim Editor Styles */
     #editor {
       flex: 1;
       min-height: 0;
@@ -87,6 +92,7 @@
     .container.horizontal #editor {
       width: 50%;
     }
+    /* AngPaoPrim Preview Styles */
     iframe {
       flex: 1;
       border: none;
@@ -107,6 +113,7 @@
       height: 100% !important;
       width: 100% !important;
     }
+    /* AngPaoPrim Fullscreen Styles */
     .container.fullscreen-preview {
       position: fixed;
       top: 0;
@@ -153,9 +160,16 @@
     #exit-fullscreen.active {
       display: block;
     }
+    /* AngPaoPrim Branding */
+    .angpaoprim-brand {
+      font-size: 0.8em;
+      opacity: 0.7;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
+  <!-- AngPaoPrim Mini CodePen Interface -->
   <div id="tabs">
     <div class="tab active" data-lang="html">HTML</div>
     <div class="tab" data-lang="css">CSS</div>
@@ -167,27 +181,34 @@
         <option value="fullscreen-preview">Fullscreen Preview</option>
       </select>
       <button id="toggle-preview">Hide Preview</button>
+      <span class="angpaoprim-brand">by AngPaoPrim</span>
     </div>
   </div>
 
+  <!-- AngPaoPrim Fullscreen Controls -->
   <div class="fullscreen-overlay" id="fullscreen-overlay"></div>
   <button id="exit-fullscreen">Exit Fullscreen (ESC)</button>
 
+  <!-- AngPaoPrim Main Container -->
   <div class="container vertical" id="main-container">
     <div id="editor"></div>
     <iframe id="preview"></iframe>
   </div>
 
+  <!-- AngPaoPrim Monaco Editor -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.5.0/dist/emmet-monaco.min.js"></script>
   <script>
+    // AngPaoPrim Code Editor Configuration
     const code = {
-      html: `<div class="container">
-  <h1>Hello World!</h1>
-  <p>Welcome to Mini CodePen</p>
-  <button onclick="changeColor()">Change Color</button>
+      html: `<!-- AngPaoPrim Sample HTML -->
+<div class="container">
+  <h1>Hello World! AngPaoPrim</h1>
+  <p>Welcome to AngPaoPrim Mini CodePen</p>
+  <button onclick="changeColor()">Change Color - AngPaoPrim</button>
 </div>`,
-      css: `body {
+      css: `/* AngPaoPrim Custom CSS Styles */
+body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-family: 'Arial', sans-serif;
@@ -199,6 +220,7 @@
   justify-content: center;
 }
 
+/* AngPaoPrim Container Design */
 .container {
   text-align: center;
   background: rgba(255, 255, 255, 0.1);
@@ -208,18 +230,21 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* AngPaoPrim Heading Styles */
 h1 {
   font-size: 3em;
   margin-bottom: 20px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* AngPaoPrim Paragraph Styles */
 p {
   font-size: 1.2em;
   margin-bottom: 30px;
   opacity: 0.9;
 }
 
+/* AngPaoPrim Button Styles */
 button {
   background: #00ff99;
   color: #222;
@@ -233,12 +258,15 @@ button {
   transform: translateY(0);
 }
 
+/* AngPaoPrim Button Hover Effect */
 button:hover {
   background: #00cc77;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 255, 153, 0.4);
 }`,
-      javascript: `function changeColor() {
+      javascript: `// AngPaoPrim JavaScript Functions
+function changeColor() {
+  // AngPaoPrim Color Palette
   const colors = [
     'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -250,14 +278,14 @@ button:hover {
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
   document.body.style.background = randomColor;
   
-  console.log('Background changed to:', randomColor);
+  console.log('AngPaoPrim: Background changed to:', randomColor);
 }
 
-// Add some interactive features
+// AngPaoPrim Interactive Features
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Mini CodePen loaded successfully!');
+  console.log('AngPaoPrim Mini CodePen loaded successfully!');
   
-  // Add click animation to container
+  // AngPaoPrim Click Animation
   const container = document.querySelector('.container');
   if (container) {
     container.addEventListener('click', function(e) {
@@ -269,18 +297,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-});`
+});
+
+// AngPaoPrim Console Branding
+console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; font-weight: bold; padding: 5px 10px; border-radius: 3px;');`
     };
 
+    // AngPaoPrim Editor Variables
     let currentLang = "html";
     let editor;
     let previewVisible = true;
     let isFullscreen = false;
     let lastLayout = "vertical";
 
+    // AngPaoPrim Monaco Editor Setup
     require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
 
     require(["vs/editor/editor.main"], function () {
+      // AngPaoPrim Editor Theme
       monaco.editor.setTheme('vs-dark');
       editor = monaco.editor.create(document.getElementById("editor"), {
         value: code[currentLang],
@@ -326,14 +360,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // Emmet
+      // AngPaoPrim Emmet Support
       if (typeof emmetMonaco !== 'undefined') {
         emmetMonaco.emmetHTML(monaco);
         emmetMonaco.emmetCSS(monaco);
         emmetMonaco.emmetJSX(monaco);
       }
 
-      // HTML config
+      // AngPaoPrim HTML Configuration
       monaco.languages.html.htmlDefaults.setOptions({
         format: {
           tabSize: 2,
@@ -356,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // JS config
+      // AngPaoPrim JavaScript Configuration
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
@@ -379,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         diagnosticCodesToIgnore: [6133, 6192, 80001, 7027, 7028, 7030, 7043, 7044, 7045, 7046, 7047, 7048, 7049, 7050, 7051, 7052, 7053, 7054, 7055, 7056, 7057, 7058, 7059, 7060, 7061, 7062, 7063, 7064, 7065, 7066, 7067, 7068, 7069, 7070, 7071, 7072, 7073, 7074, 7075, 7076, 7077, 7078, 7079, 7080, 7081, 7082, 7083, 7084, 7085, 7086, 7087, 7088, 7089, 7090, 7091, 7092, 7093, 7094, 7095, 7096, 7097, 7098, 7099, 7100, 7101, 7102, 7103, 7104, 7105, 7106, 7107, 7108, 7109, 7110, 7111, 7112, 7113, 7114, 7115, 7116, 7117, 7118, 7119, 7120, 7121, 7122, 7123, 7124, 7125, 7126, 7127, 7128, 7129, 7130, 7131, 7132, 7133, 7134, 7135, 7136, 7137, 7138, 7139, 7140, 7141, 7142, 7143, 7144, 7145, 7146, 7147, 7148, 7149, 7150, 7151, 7152, 7153, 7154, 7155, 7156, 7157, 7158, 7159, 7160, 7161, 7162, 7163, 7164, 7165, 7166, 7167, 7168, 7169, 7170, 7171, 7172, 7173, 7174, 7175, 7176, 7177, 7178, 7179, 7180, 7181, 7182, 7183, 7184, 7185, 7186, 7187, 7188, 7189, 7190, 7191, 7192, 7193, 7194, 7195, 7196, 7197, 7198, 7199]
       });
 
-      // CSS config
+      // AngPaoPrim CSS Configuration
       monaco.languages.css.cssDefaults.setOptions({
         validate: true,
         lint: {
@@ -404,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // --- HTML Tag Auto Complete: พิมพ์ tag แล้ว Tab ได้ทุก tag ---
+      // AngPaoPrim HTML Tag Auto Complete
       const htmlTags = [
         "div", "span", "section", "header", "footer", "nav", "main", "aside", "article",
         "ul", "ol", "li", "a", "img", "h1", "h2", "h3", "h4", "h5", "h6", "p", "button",
@@ -430,14 +464,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? `<${tag} />`
                 : `<${tag}></${tag}>`,
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: `${tag} element`
+              documentation: `AngPaoPrim ${tag} element`
             }));
 
           return { suggestions };
         }
       });
 
-      // Tab switching
+      // AngPaoPrim Tab Switching
       document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
           if (tab.classList.contains("active")) return;
@@ -450,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
-      // Layout switching
+      // AngPaoPrim Layout Switching
       const layoutSelect = document.getElementById("layout-select");
       const container = document.getElementById("main-container");
       const overlay = document.getElementById("fullscreen-overlay");
@@ -466,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
+      // AngPaoPrim Fullscreen Functions
       function enterFullscreen() {
         isFullscreen = true;
         container.className = "container fullscreen-preview";
@@ -489,17 +524,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
       }
 
-      // Exit fullscreen button
+      // AngPaoPrim Exit Fullscreen Button
       exitBtn.addEventListener("click", () => exitFullscreen());
 
-      // ESC key to exit fullscreen
+      // AngPaoPrim ESC Key Handler
       document.addEventListener("keydown", function(e) {
         if (e.key === "Escape" && isFullscreen) {
           exitFullscreen();
         }
       });
 
-      // Toggle preview visibility
+      // AngPaoPrim Toggle Preview
       document.getElementById("toggle-preview").addEventListener("click", function() {
         previewVisible = !previewVisible;
         if (previewVisible) {
@@ -514,16 +549,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
       });
 
-      // Auto update preview
+      // AngPaoPrim Auto Update Preview
       editor.onDidChangeModelContent(() => {
         code[currentLang] = editor.getValue();
         updatePreview();
       });
 
-      // Initial preview update
+      // AngPaoPrim Initial Preview Update
       updatePreview();
 
-      // ปิด warning ทั้งหมดสำหรับ JavaScript
+      // AngPaoPrim JavaScript Diagnostics
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: false,
         noSyntaxValidation: false,
@@ -531,7 +566,7 @@ document.addEventListener('DOMContentLoaded', function() {
         diagnosticCodesToIgnore: [6133, 6192, 80001, 7027, 7028, 7030, 7043, 7044, 7045, 7046, 7047, 7048, 7049, 7050, 7051, 7052, 7053, 7054, 7055, 7056, 7057, 7058, 7059, 7060, 7061, 7062, 7063, 7064, 7065, 7066, 7067, 7068, 7069, 7070, 7071, 7072, 7073, 7074, 7075, 7076, 7077, 7078, 7079, 7080, 7081, 7082, 7083, 7084, 7085, 7086, 7087, 7088, 7089, 7090, 7091, 7092, 7093, 7094, 7095, 7096, 7097, 7098, 7099, 7100, 7101, 7102, 7103, 7104, 7105, 7106, 7107, 7108, 7109, 7110, 7111, 7112, 7113, 7114, 7115, 7116, 7117, 7118, 7119, 7120, 7121, 7122, 7123, 7124, 7125, 7126, 7127, 7128, 7129, 7130, 7131, 7132, 7133, 7134, 7135, 7136, 7137, 7138, 7139, 7140, 7141, 7142, 7143, 7144, 7145, 7146, 7147, 7148, 7149, 7150, 7151, 7152, 7153, 7154, 7155, 7156, 7157, 7158, 7159, 7160, 7161, 7162, 7163, 7164, 7165, 7166, 7167, 7168, 7169, 7170, 7171, 7172, 7173, 7174, 7175, 7176, 7177, 7178, 7179, 7180, 7181, 7182, 7183, 7184, 7185, 7186, 7187, 7188, 7189, 7190, 7191, 7192, 7193, 7194, 7195, 7196, 7197, 7198, 7199]
       });
 
-      // ปิด warning ทั้งหมดสำหรับ CSS
+      // AngPaoPrim CSS Diagnostics
       monaco.languages.css.cssDefaults.setOptions({
         validate: true,
         lint: {
@@ -556,7 +591,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // ปิด warning ทั้งหมดสำหรับ HTML
+      // AngPaoPrim HTML Diagnostics
       monaco.languages.html.htmlDefaults.setOptions({
         validate: true,
         suggest: {
@@ -569,12 +604,13 @@ document.addEventListener('DOMContentLoaded', function() {
         documentColors: true,
         diagnostics: {
           enabled: true,
-          severity: "error" // ให้โชว์เฉพาะ error
+          severity: "error"
         }
       });
 
     });
 
+    // AngPaoPrim Preview Update Function
     function updatePreview() {
       const htmlContent = code.html || "";
       const cssContent = `<style>${code.css || ""}</style>`;
@@ -586,6 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>AngPaoPrim Preview</title>
           ${cssContent}
         </head>
         <body>
@@ -598,41 +635,39 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("preview").srcdoc = fullContent;
     }
 
+    // AngPaoPrim HTML Formatting
     monaco.languages.html.htmlDefaults.setOptions({
-  format: {
-    tabSize: 2,
-    insertSpaces: true,
-    wrapLineLength: 120,
-    unformatted: 'default',
-    contentUnformatted: 'pre,code,textarea',
-    indentInnerHtml: false,
-    preserveNewLines: true,
-    maxPreserveNewLines: 10,
-    indentHandlebars: false,
-    endWithNewline: true
-  }
-});
+      format: {
+        tabSize: 2,
+        insertSpaces: true,
+        wrapLineLength: 120,
+        unformatted: 'default',
+        contentUnformatted: 'pre,code,textarea',
+        indentInnerHtml: false,
+        preserveNewLines: true,
+        maxPreserveNewLines: 10,
+        indentHandlebars: false,
+        endWithNewline: true
+      }
+    });
 
-  // ...existing code...
+    // AngPaoPrim Custom Theme
+    monaco.editor.defineTheme('angpaoprim-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editorError.foreground': '#ff0000',
+        'editorError.border': '#ff0000',
+        'editorWarning.foreground': '#00ff00',
+        'editorWarning.border': '#00ff00',
+        'editorGutter.background': '#1e1e1e'
+      }
+    });
+    monaco.editor.setTheme('angpaoprim-dark');
 
-// ตั้งค่าสีเส้นใต้ error/warning ใน Monaco Editor
-monaco.editor.defineTheme('custom-dark', {
-  base: 'vs-dark',
-  inherit: true,
-  rules: [],
-  colors: {
-    'editorError.foreground': '#ff0000',      // error text (แดง)
-    'editorError.border': '#ff0000',          // error border (แดง)
-    'editorWarning.foreground': '#00ff00',    // warning text (เขียว)
-    'editorWarning.border': '#00ff00',        // warning border (เขียว)
-    'editorGutter.background': '#1e1e1e'
-  }
-});
-monaco.editor.setTheme('custom-dark');
-
-// ...existing code...
-
-
+    // AngPaoPrim Analytics
+    console.log('AngPaoPrim Mini CodePen initialized successfully!');
   </script>
 </body>
 </html>
