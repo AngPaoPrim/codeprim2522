@@ -9,10 +9,6 @@
   <meta name="publisher" content="AngPaoPrim">
   <meta name="google-site-verification" content="5NA86ZVpuVx4FWOb1RkP7wwiufNOdnT2q-lDeaw8ZRY" />
   <meta charset="UTF-8" />
-  <title>AngPaoPrim อั่งเปา โค้ด</title>
-  <title>AngPaoPrim เปา ฝึก โค้ด </title>
-  <title>AngPaoPrim AngPaoCode</title>
-  <title>AngPaoPrim Mini CodePen Enhanced Auto Complete</title>
   <style>
     /* AngPaoPrim Custom Styles */
     body {
@@ -67,6 +63,42 @@
     }
     #toggle-preview:hover {
       background: #00cc77;
+    }
+    #save-code {
+      padding: 10px 20px;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #save-code:hover {
+      background: #005a99;
+    }
+    #load-code {
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #load-code:hover {
+      background: #1e7e34;
+    }
+    #clear-code {
+      padding: 10px 20px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #clear-code:hover {
+      background: #c82333;
     }
     /* AngPaoPrim Container Styles */
     .container {
@@ -166,6 +198,33 @@
       opacity: 0.7;
       margin-left: 10px;
     }
+    /* AngPaoPrim Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      z-index: 1002;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    }
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .notification.success {
+      background: #28a745;
+    }
+    .notification.error {
+      background: #dc3545;
+    }
+    .notification.info {
+      background: #17a2b8;
+    }
   </style>
 </head>
 <body>
@@ -181,6 +240,9 @@
         <option value="fullscreen-preview">Fullscreen Preview</option>
       </select>
       <button id="toggle-preview">Hide Preview</button>
+      <button id="save-code">Save</button>
+      <button id="load-code">Load</button>
+      <button id="clear-code">Clear</button>
       <span class="angpaoprim-brand">by AngPaoPrim</span>
     </div>
   </div>
@@ -188,6 +250,9 @@
   <!-- AngPaoPrim Fullscreen Controls -->
   <div class="fullscreen-overlay" id="fullscreen-overlay"></div>
   <button id="exit-fullscreen">Exit Fullscreen (ESC)</button>
+
+  <!-- AngPaoPrim Notification -->
+  <div id="notification" class="notification"></div>
 
   <!-- AngPaoPrim Main Container -->
   <div class="container vertical" id="main-container">
@@ -200,7 +265,7 @@
   <script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.5.0/dist/emmet-monaco.min.js"></script>
   <script>
     // AngPaoPrim Code Editor Configuration
-    const code = {
+    const defaultCode = {
       html: `<!-- AngPaoPrim Sample HTML -->
 <div class="container">
   <h1>Hello World! AngPaoPrim</h1>
@@ -304,11 +369,112 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
     };
 
     // AngPaoPrim Editor Variables
+    let code = { ...defaultCode };
     let currentLang = "html";
     let editor;
     let previewVisible = true;
     let isFullscreen = false;
     let lastLayout = "vertical";
+
+    // AngPaoPrim Notification System
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // AngPaoPrim Save/Load Functions
+    function saveCode() {
+      try {
+        // อัปเดตโค้ดปัจจุบันก่อนบันทึก
+        code[currentLang] = editor.getValue();
+        
+        // บันทึกลง localStorage
+        const codeData = {
+          html: code.html,
+          css: code.css,
+          javascript: code.javascript,
+          timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem('angpaoprim-code-data', JSON.stringify(codeData));
+        showNotification('บันทึกโค้ดสำเร็จ!', 'success');
+        console.log('AngPaoPrim: Code saved successfully!');
+      } catch (error) {
+        showNotification('เกิดข้อผิดพลาดในการบันทึก', 'error');
+        console.error('AngPaoPrim: Error saving code:', error);
+      }
+    }
+
+    function loadCode() {
+      try {
+        const savedData = localStorage.getItem('angpaoprim-code-data');
+        if (savedData) {
+          const codeData = JSON.parse(savedData);
+          
+          // อัปเดตโค้ดทั้งหมด
+          code.html = codeData.html || defaultCode.html;
+          code.css = codeData.css || defaultCode.css;
+          code.javascript = codeData.javascript || defaultCode.javascript;
+          
+          // อัปเดต editor ด้วยภาษาปัจจุบัน
+          editor.setValue(code[currentLang]);
+          
+          // อัปเดต preview
+          updatePreview();
+          
+          const saveDate = new Date(codeData.timestamp).toLocaleString('th-TH');
+          showNotification(`โหลดโค้ดสำเร็จ! (บันทึกเมื่อ: ${saveDate})`, 'success');
+          console.log('AngPaoPrim: Code loaded successfully!');
+        } else {
+          showNotification('ไม่พบข้อมูลโค้ดที่บันทึกไว้', 'info');
+        }
+      } catch (error) {
+        showNotification('เกิดข้อผิดพลาดในการโหลด', 'error');
+        console.error('AngPaoPrim: Error loading code:', error);
+      }
+    }
+
+    function clearCode() {
+      if (confirm('คุณต้องการล้างโค้ดทั้งหมดใช่หรือไม่?')) {
+        // รีเซ็ตโค้ดเป็นค่าเริ่มต้น
+        code = { ...defaultCode };
+        
+        // อัปเดต editor
+        editor.setValue(code[currentLang]);
+        
+        // อัปเดต preview
+        updatePreview();
+        
+        showNotification('ล้างโค้ดเรียบร้อยแล้ว', 'info');
+        console.log('AngPaoPrim: Code cleared successfully!');
+      }
+    }
+
+    // AngPaoPrim Auto Load on Startup
+    function autoLoadCode() {
+      try {
+        const savedData = localStorage.getItem('angpaoprim-code-data');
+        if (savedData) {
+          const codeData = JSON.parse(savedData);
+          code.html = codeData.html || defaultCode.html;
+          code.css = codeData.css || defaultCode.css;
+          code.javascript = codeData.javascript || defaultCode.javascript;
+          console.log('AngPaoPrim: Auto-loaded saved code');
+        }
+      } catch (error) {
+        console.log('AngPaoPrim: No saved code found or error loading, using default');
+        code = { ...defaultCode };
+      }
+    }
+
+    // AngPaoPrim Auto-load ก่อนสร้าง editor
+    autoLoadCode();
 
     // AngPaoPrim Monaco Editor Setup
     require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
@@ -409,8 +575,7 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: false,
         noSyntaxValidation: false,
-        noSuggestionDiagnostics: false,
-        diagnosticCodesToIgnore: [6133, 6192, 80001, 7027, 7028, 7030, 7043, 7044, 7045, 7046, 7047, 7048, 7049, 7050, 7051, 7052, 7053, 7054, 7055, 7056, 7057, 7058, 7059, 7060, 7061, 7062, 7063, 7064, 7065, 7066, 7067, 7068, 7069, 7070, 7071, 7072, 7073, 7074, 7075, 7076, 7077, 7078, 7079, 7080, 7081, 7082, 7083, 7084, 7085, 7086, 7087, 7088, 7089, 7090, 7091, 7092, 7093, 7094, 7095, 7096, 7097, 7098, 7099, 7100, 7101, 7102, 7103, 7104, 7105, 7106, 7107, 7108, 7109, 7110, 7111, 7112, 7113, 7114, 7115, 7116, 7117, 7118, 7119, 7120, 7121, 7122, 7123, 7124, 7125, 7126, 7127, 7128, 7129, 7130, 7131, 7132, 7133, 7134, 7135, 7136, 7137, 7138, 7139, 7140, 7141, 7142, 7143, 7144, 7145, 7146, 7147, 7148, 7149, 7150, 7151, 7152, 7153, 7154, 7155, 7156, 7157, 7158, 7159, 7160, 7161, 7162, 7163, 7164, 7165, 7166, 7167, 7168, 7169, 7170, 7171, 7172, 7173, 7174, 7175, 7176, 7177, 7178, 7179, 7180, 7181, 7182, 7183, 7184, 7185, 7186, 7187, 7188, 7189, 7190, 7191, 7192, 7193, 7194, 7195, 7196, 7197, 7198, 7199]
+        noSuggestionDiagnostics: false
       });
 
       // AngPaoPrim CSS Configuration
@@ -444,6 +609,7 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
         "ul", "ol", "li", "a", "img", "h1", "h2", "h3", "h4", "h5", "h6", "p", "button",
         "input", "form", "label", "textarea", "select", "option", "table", "thead", "tbody", "tr", "td", "th", "br", "hr"
       ];
+      
       monaco.languages.registerCompletionItemProvider('html', {
         triggerCharacters: htmlTags.map(tag => tag[0]),
         provideCompletionItems: function(model, position) {
@@ -470,6 +636,13 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
           return { suggestions };
         }
       });
+
+      // AngPaoPrim Event Listeners
+      
+      // Save/Load/Clear Buttons
+      document.getElementById('save-code').addEventListener('click', saveCode);
+      document.getElementById('load-code').addEventListener('click', loadCode);
+      document.getElementById('clear-code').addEventListener('click', clearCode);
 
       // AngPaoPrim Tab Switching
       document.querySelectorAll(".tab").forEach(tab => {
@@ -532,6 +705,16 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
         if (e.key === "Escape" && isFullscreen) {
           exitFullscreen();
         }
+        // AngPaoPrim Keyboard Shortcuts
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 's') {
+            e.preventDefault();
+            saveCode();
+          } else if (e.key === 'o') {
+            e.preventDefault();
+            loadCode();
+          }
+        }
       });
 
       // AngPaoPrim Toggle Preview
@@ -558,56 +741,40 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
       // AngPaoPrim Initial Preview Update
       updatePreview();
 
-      // AngPaoPrim JavaScript Diagnostics
-      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: false,
-        noSyntaxValidation: false,
-        noSuggestionDiagnostics: false,
-        diagnosticCodesToIgnore: [6133, 6192, 80001, 7027, 7028, 7030, 7043, 7044, 7045, 7046, 7047, 7048, 7049, 7050, 7051, 7052, 7053, 7054, 7055, 7056, 7057, 7058, 7059, 7060, 7061, 7062, 7063, 7064, 7065, 7066, 7067, 7068, 7069, 7070, 7071, 7072, 7073, 7074, 7075, 7076, 7077, 7078, 7079, 7080, 7081, 7082, 7083, 7084, 7085, 7086, 7087, 7088, 7089, 7090, 7091, 7092, 7093, 7094, 7095, 7096, 7097, 7098, 7099, 7100, 7101, 7102, 7103, 7104, 7105, 7106, 7107, 7108, 7109, 7110, 7111, 7112, 7113, 7114, 7115, 7116, 7117, 7118, 7119, 7120, 7121, 7122, 7123, 7124, 7125, 7126, 7127, 7128, 7129, 7130, 7131, 7132, 7133, 7134, 7135, 7136, 7137, 7138, 7139, 7140, 7141, 7142, 7143, 7144, 7145, 7146, 7147, 7148, 7149, 7150, 7151, 7152, 7153, 7154, 7155, 7156, 7157, 7158, 7159, 7160, 7161, 7162, 7163, 7164, 7165, 7166, 7167, 7168, 7169, 7170, 7171, 7172, 7173, 7174, 7175, 7176, 7177, 7178, 7179, 7180, 7181, 7182, 7183, 7184, 7185, 7186, 7187, 7188, 7189, 7190, 7191, 7192, 7193, 7194, 7195, 7196, 7197, 7198, 7199]
-      });
+      // AngPaoPrim Auto Save (ทุก 30 วินาที)
+      setInterval(() => {
+        code[currentLang] = editor.getValue();
+        try {
+          const codeData = {
+            html: code.html,
+            css: code.css,
+            javascript: code.javascript,
+            timestamp: new Date().toISOString(),
+            autoSave: true
+          };
+          localStorage.setItem('angpaoprim-code-autosave', JSON.stringify(codeData));
+          console.log('AngPaoPrim: Auto-saved');
+        } catch (error) {
+          console.error('AngPaoPrim: Auto-save failed:', error);
+        }
+      }, 30000);
 
-      // AngPaoPrim CSS Diagnostics
-      monaco.languages.css.cssDefaults.setOptions({
-        validate: true,
-        lint: {
-          compatibleVendorPrefixes: "ignore",
-          vendorPrefix: "ignore",
-          duplicateProperties: "ignore",
-          emptyRules: "ignore",
-          importStatement: "ignore",
-          boxModel: "ignore",
-          universalSelector: "ignore",
-          zeroUnits: "ignore",
-          fontFaceProperties: "ignore",
-          hexColorLength: "ignore",
-          argumentsInColorFunction: "ignore",
-          unknownProperties: "ignore",
-          ieHack: "ignore",
-          unknownVendorSpecificProperties: "ignore",
-          propertyIgnoredDueToDisplay: "ignore",
-          important: "ignore",
-          float: "ignore",
-          idSelector: "ignore"
+      // AngPaoPrim Custom Theme
+      monaco.editor.defineTheme('angpaoprim-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editorError.foreground': '#ff0000',
+          'editorError.border': '#ff0000',
+          'editorWarning.foreground': '#00ff00',
+          'editorWarning.border': '#00ff00',
+          'editorGutter.background': '#1e1e1e'
         }
       });
+      monaco.editor.setTheme('angpaoprim-dark');
 
-      // AngPaoPrim HTML Diagnostics
-      monaco.languages.html.htmlDefaults.setOptions({
-        validate: true,
-        suggest: {
-          html5: true
-        },
-        format: {},
-        data: {},
-        hover: true,
-        links: true,
-        documentColors: true,
-        diagnostics: {
-          enabled: true,
-          severity: "error"
-        }
-      });
-
+      console.log('AngPaoPrim Mini CodePen initialized successfully!');
     });
 
     // AngPaoPrim Preview Update Function
@@ -635,39 +802,8 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
       document.getElementById("preview").srcdoc = fullContent;
     }
 
-    // AngPaoPrim HTML Formatting
-    monaco.languages.html.htmlDefaults.setOptions({
-      format: {
-        tabSize: 2,
-        insertSpaces: true,
-        wrapLineLength: 120,
-        unformatted: 'default',
-        contentUnformatted: 'pre,code,textarea',
-        indentInnerHtml: false,
-        preserveNewLines: true,
-        maxPreserveNewLines: 10,
-        indentHandlebars: false,
-        endWithNewline: true
-      }
-    });
-
-    // AngPaoPrim Custom Theme
-    monaco.editor.defineTheme('angpaoprim-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'editorError.foreground': '#ff0000',
-        'editorError.border': '#ff0000',
-        'editorWarning.foreground': '#00ff00',
-        'editorWarning.border': '#00ff00',
-        'editorGutter.background': '#1e1e1e'
-      }
-    });
-    monaco.editor.setTheme('angpaoprim-dark');
-
     // AngPaoPrim Analytics
-    console.log('AngPaoPrim Mini CodePen initialized successfully!');
+    console.log('AngPaoPrim Mini CodePen with Fixed Save/Load System!');
   </script>
 </body>
 </html>
