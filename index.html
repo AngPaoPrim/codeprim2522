@@ -241,7 +241,7 @@
         </select>
         <button id="toggle-preview">Hide Preview</button>
         <label style="color:white; margin-left: 10px; user-select:none;">
-        <input type="checkbox" id="toggle-autosave" checked />
+        <input type="checkbox" id="toggle-autosave"/>
         Auto Save
         </label>
         <button id="save-code">Save</button>
@@ -416,33 +416,44 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
     }
 
     function loadCode() {
-      try {
-        const savedData = localStorage.getItem('angpaoprim-code-data');
-        if (savedData) {
-          const codeData = JSON.parse(savedData);
-          
-          // อัปเดตโค้ดทั้งหมด
-          code.html = codeData.html || defaultCode.html;
-          code.css = codeData.css || defaultCode.css;
-          code.javascript = codeData.javascript || defaultCode.javascript;
-          
-          // อัปเดต editor ด้วยภาษาปัจจุบัน
-          editor.setValue(code[currentLang]);
-          
-          // อัปเดต preview
-          updatePreview();
-          
-          const saveDate = new Date(codeData.timestamp).toLocaleString('th-TH');
-          showNotification(`โหลดโค้ดสำเร็จ! (บันทึกเมื่อ: ${saveDate})`, 'success');
-          console.log('AngPaoPrim: Code loaded successfully!');
-        } else {
-          showNotification('ไม่พบข้อมูลโค้ดที่บันทึกไว้', 'info');
-        }
-      } catch (error) {
-        showNotification('เกิดข้อผิดพลาดในการโหลด', 'error');
-        console.error('AngPaoPrim: Error loading code:', error);
-      }
+  try {
+    const choice = prompt("โหลดโค้ดจาก:\n1 = Manual Save\n2 = Auto Save", "1");
+
+    let storageKey;
+    let saveType;
+
+    if (choice === "2") {
+      storageKey = 'angpaoprim-code-autosave';
+      saveType = 'Auto Save';
+    } else {
+      storageKey = 'angpaoprim-code-data';
+      saveType = 'Manual Save';
     }
+
+    const savedData = localStorage.getItem(storageKey);
+
+    if (savedData) {
+      const codeData = JSON.parse(savedData);
+
+      code.html = codeData.html || defaultCode.html;
+      code.css = codeData.css || defaultCode.css;
+      code.javascript = codeData.javascript || defaultCode.javascript;
+
+      editor.setValue(code[currentLang]);
+      updatePreview();
+
+      const saveDate = new Date(codeData.timestamp).toLocaleString('th-TH');
+      showNotification(`โหลดโค้ดสำเร็จ! (${saveType})\nบันทึกเมื่อ: ${saveDate}`, 'success');
+      console.log(`AngPaoPrim: Loaded from ${saveType}`);
+    } else {
+      showNotification(`ไม่พบข้อมูลจาก ${saveType}`, 'warning');
+    }
+  } catch (error) {
+    showNotification('เกิดข้อผิดพลาดในการโหลด', 'error');
+    console.error('AngPaoPrim: Load failed', error);
+  }
+}
+
 
     function clearCode() {
       if (confirm('คุณต้องการล้างโค้ดทั้งหมดใช่หรือไม่?')) {
@@ -810,20 +821,20 @@ console.log('%c AngPaoPrim Mini CodePen ', 'background: #00ff99; color: #222; fo
     console.log('AngPaoPrim Mini CodePen with Fixed Save/Load System!');
 
     // ตัวแปรเก็บสถานะ Auto Save
-let autoSaveEnabled = true;
+let autoSaveEnabled = false;  // ปิด auto save เป็นค่าเริ่มต้น
 
-// โหลดสถานะ toggle auto save จาก localStorage (ถ้ามี)
 const toggleAutoSaveCheckbox = document.getElementById('toggle-autosave');
 const savedAutoSaveStatus = localStorage.getItem('angpaoprim-auto-save-enabled');
+
 if (savedAutoSaveStatus !== null) {
   autoSaveEnabled = savedAutoSaveStatus === 'true';
   toggleAutoSaveCheckbox.checked = autoSaveEnabled;
+} else {
+  // ถ้าไม่เคยมีค่าบันทึกใน localStorage ให้ปิด toggle ด้วย
+  toggleAutoSaveCheckbox.checked = false;
 }
 
-// ฟังก์ชันแสดงแจ้งเตือนง่าย ๆ
-function showNotification(message) {
-  alert(message);
-}
+
 
 // ฟังชันก์เปลี่ยนสถานะ toggle
 toggleAutoSaveCheckbox.addEventListener('change', () => {
@@ -832,23 +843,27 @@ toggleAutoSaveCheckbox.addEventListener('change', () => {
   showNotification(`Auto Save ${autoSaveEnabled ? 'เปิด' : 'ปิด'}`);
 });
 
-// ตัวอย่างการใช้งาน Auto Save (บันทึกโค้ดลง localStorage ทุก 30 วินาที เมื่อเปิด)
+// ระบบ Auto Save ที่สมบูรณ์
 setInterval(() => {
   if (!autoSaveEnabled) return;
-
-  // สมมติโค้ดของคุณเก็บในตัวแปร codeObj
-  // เช่น codeObj = {html: "...", css: "...", js: "..."}
   
-  // ตัวอย่าง:
-  const codeObj = {
-    html: document.getElementById('html-editor').value || '',
-    css: document.getElementById('css-editor').value || '',
-    js: document.getElementById('js-editor').value || ''
-  };
+  try {
+    // อัปเดตโค้ดปัจจุบัน
+    code[currentLang] = editor.getValue();
 
-  localStorage.setItem('angpaoprim-code-autosave', JSON.stringify(codeObj));
-  console.log('Auto-saved code.');
-}, 30000),alert("save");
+    const codeData = {
+      html: code.html,
+      css: code.css,
+      javascript: code.javascript,
+      timestamp: new Date().toISOString()
+    };
+
+    localStorage.setItem('angpaoprim-code-autosave', JSON.stringify(codeData));
+    console.log('AngPaoPrim: Auto-saved successfully!');
+  } catch (error) {
+    console.error('AngPaoPrim: Auto-save failed:', error);
+  }
+}, 30000,);
 
 
 
